@@ -1,0 +1,43 @@
+from datetime import timedelta
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="WG_", env_file=".env", env_file_encoding="utf-8")
+
+    # Core
+    project_name: str = "wireguard-session-service"
+    environment: str = "dev"
+
+    # Security
+    jwt_secret_key: str = "change-me"
+    jwt_algorithm: str = "HS256"
+    access_token_expires_seconds: int = 900
+    proof_token_expires_seconds: int = 60
+
+    # Session control
+    ttl_max_seconds: int = 8 * 60 * 60  # 8 hours default
+    ttl_step_default_seconds: int = 15 * 60
+    allow_multiple_active_sessions: bool = False
+
+    # Database
+    database_url: str = "sqlite:///./data.db"
+
+    # WireGuard defaults
+    wg_endpoint: str = "vpn.example.com:51820"
+    wg_gateway_pubkey: str = "GATEWAY_PUBKEY_PLACEHOLDER"
+    wg_allowed_ips: str = "10.0.0.0/16"
+    wg_dns: str = "10.0.0.1"
+    wg_address_prefix: str = "10.10.0."  # simplistic allocator base
+
+    # Admin
+    admin_token: str = "admin-token-change-me"
+
+    def access_token_ttl(self) -> timedelta:
+        return timedelta(seconds=self.access_token_expires_seconds)
+
+    def proof_token_ttl(self) -> timedelta:
+        return timedelta(seconds=self.proof_token_expires_seconds)
+
+
+settings = Settings()
