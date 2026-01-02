@@ -38,11 +38,17 @@ def _revoke_expired_once() -> None:
             expires_at = _ensure_aware(sess.expires_at)
             if expires_at > now:
                 continue
+
+            try:
+                wireguard_service.remove_peer(sess.id, sess.client_pubkey)  # best-effort first
+            except Exception as e:
+                logger.exception("Failed to remove peer for %s: %s", sess.id, e)
+                continue
+
             sess.status = SessionStatus.EXPIRED
             sess.updated_at = now
             db.add(sess)
             db.commit()
-            wireguard_service.remove_peer(sess.id, sess.client_pubkey)
             audit(db, action="session_expired", user_id=sess.user_id, session_id=sess.id, detail="Auto-expire")
             logger.info("Session %s expired automatically", sess.id)
 
