@@ -27,7 +27,6 @@ def _seed_default_user() -> None:
             username="demo",
             password_hash=hash_password("changeme"),
             mfa_secret="JBSWY3DPEHPK3PXP",  # base32 for demo
-            is_admin=True,
         )
         db.add(demo)
         db.commit()

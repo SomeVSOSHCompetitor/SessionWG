@@ -11,4 +11,3 @@ class User(Base):
     password_hash = Column(String, nullable=False)
     mfa_secret = Column(String, nullable=False)
     is_active = Column(Boolean, default=True)
-    is_admin = Column(Boolean, default=False)
