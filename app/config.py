@@ -21,7 +21,8 @@ class Settings(BaseSettings):
     allow_multiple_active_sessions: bool = False
 
     # Database
-    database_url: str = "sqlite:///./data.db"
+    # Example: postgresql+psycopg2://user:pass@localhost:5432/dbname
+    database_url: str = "postgresql+psycopg2://postgres:password@localhost:5432/wg"
 
     # WireGuard defaults
     wg_endpoint: str = "vpn.example.com:51820"

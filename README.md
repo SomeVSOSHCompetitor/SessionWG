@@ -4,13 +4,19 @@ FastAPI service that issues short-lived WireGuard VPN sessions guarded by MFA. S
 
 ## Quickstart
 
-1) Create and activate a virtualenv (optional) and install deps:
+1) Create and activate a virtualenv (optional) and install deps (requires psycopg2):
 
 ```bash
 pip install -r requirements.txt
 ```
 
-2) Run the API (dev):
+2) Ensure PostgreSQL is running and reachable. Default DSN (can be overridden via env):
+
+```
+export WG_DATABASE_URL="postgresql+psycopg2://postgres:postgres@localhost:5432/wg"
+```
+
+3) Run the API (dev):
 
 ```bash
 uvicorn app.main:app --reload --port 8000
