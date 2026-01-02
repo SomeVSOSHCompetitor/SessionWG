@@ -50,7 +50,6 @@ class RenewVerifyResponse(BaseModel):
 
 
 class WgInterface(BaseModel):
-    private_key: str | None = None
     address: str
     dns: list[str]
 
