@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
 from app.config import settings
+from app.models import IpPool as IPModel
 from app.models.challenge import Challenge, ChallengeType
 from app.models.session import Session as SessionModel, SessionStatus
 from app.models.user import User
@@ -22,6 +23,7 @@ from app.schemas.session import (
 )
 from app.services import security
 from app.services.audit import audit
+from app.services.ip_alloc import allocate_ip, IpPoolExhausted
 from app.services.wireguard import wireguard_service
 
 CHALLENGE_TTL_SECONDS = 120
@@ -54,10 +56,13 @@ def _validate_owner(sess: SessionModel, user: User) -> None:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not owner")
 
 
-def _allocate_address(user_id: int) -> str:
-    # Not production-safe allocator; deterministic for demo
-    octet = 10 + (user_id % 200)
-    return f"{settings.address_prefix}{octet}/32"
+def _allocate_address(db: Session, session_id: str) -> str:
+    try:
+        allocated_ip = allocate_ip(db, session_id)
+        return f"{allocated_ip}/32"
+    except IpPoolExhausted as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
 
 
 def _proof_from_header(proof_header: str | None) -> str:
@@ -105,8 +110,9 @@ def create_session(
     db.add(sess)
     db.commit()
 
-    wireguard_service.add_peer(sess.id, payload.client_pubkey, settings.allowed_ips)
-    audit(db, action="session_created", user_id=user.id, session_id=sess.id)
+    allowed_ips = _allocate_address(db, sess.id)
+    wireguard_service.add_peer(sess.id, payload.client_pubkey, allowed_ips)
+    audit(db, action="session_created", user_id=user.id, session_id=sess.id, detail="Created session. Allocated IPs: " + allowed_ips)
 
     proof_token = security.create_proof_token(sess.id, user.id)
     return SessionCreateResponse(
@@ -281,8 +287,12 @@ def session_config(
     if sess.status != SessionStatus.ACTIVE:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Session not active")
 
+    ip: IPModel | None = db.query(IPModel).filter(IPModel.session_id == session_id).first()
+    if not ip:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="IP not found")
+
     return SessionConfigResponse(
-        interface=WgInterface(address=_allocate_address(sess.user_id), dns=[settings.dns]),
+        interface=WgInterface(address=ip.ip, dns=[settings.dns]),
         peer=WgPeer(
             public_key=settings.gateway_pubkey,
             endpoint=settings.endpoint,
