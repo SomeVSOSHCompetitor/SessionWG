@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg2://postgres:password@localhost:5432/wg"
 
     # WireGuard defaults
+    wg_interface: str = "wg0"
     wg_endpoint: str = "vpn.example.com:51820"
     wg_gateway_pubkey: str = "GATEWAY_PUBKEY_PLACEHOLDER"
     wg_allowed_ips: str = "10.0.0.0/16"
