@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     interface: str = "wg0"
     endpoint: str = "vpn.example.com:51820"
     gateway_pubkey: str = "GATEWAY_PUBKEY_PLACEHOLDER"
-    allowed_ips: str = "10.0.0.0/16"
+    allowed_ips: list[str] = []
     reserved_ips: list[str] = []
     dns: str = "10.0.0.1"
     address_prefix: str = "10.10.0."  # simplistic allocator base
