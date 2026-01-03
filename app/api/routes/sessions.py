@@ -296,7 +296,7 @@ def session_config(
         peer=WgPeer(
             public_key=settings.gateway_pubkey,
             endpoint=settings.endpoint,
-            allowed_ips=[settings.allowed_ips],
+            allowed_ips=settings.allowed_ips,
         ),
     )
 
