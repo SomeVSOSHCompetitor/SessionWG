@@ -9,6 +9,7 @@ from app.db import SessionLocal, engine
 from app.models import audit, challenge, session as session_model, user  # noqa: F401
 from app.models.base import Base
 from app.models.user import User
+from app.services.ip_pool_init import sync_ip_pool
 from app.services.revoker import create_revoker
 from app.services.security import hash_password
 
@@ -40,6 +41,8 @@ def create_app() -> FastAPI:
     @app.on_event("startup")
     async def startup() -> None:  # pragma: no cover - wiring
         Base.metadata.create_all(bind=engine)
+        with SessionLocal() as db:
+            sync_ip_pool(db)
         _seed_default_user()
         revoker.start()
 

@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     reserved_ips: list[str] = []
     dns: str = "10.0.0.1"
     address_prefix: str = "10.10.0."  # simplistic allocator base
+    network_cidr: str = "10.0.0.0/24"
 
     # wgctl settings
     wgctl_token: str = "secret-token-change-me"
