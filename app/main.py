@@ -10,6 +10,7 @@ from app.models import audit, challenge, session as session_model, user  # noqa:
 from app.models.base import Base
 from app.models.user import User
 from app.services.ip_pool_init import sync_ip_pool
+from app.services.qurantine import create_quarantine_releaser
 from app.services.revoker import create_revoker
 from app.services.security import hash_password
 
@@ -17,6 +18,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 revoker = create_revoker()
+quarantine_releaser = create_quarantine_releaser()
 
 
 def _seed_default_user() -> None:
@@ -45,10 +47,12 @@ def create_app() -> FastAPI:
             sync_ip_pool(db)
         _seed_default_user()
         revoker.start()
+        quarantine_releaser.start()
 
     @app.on_event("shutdown")
     async def shutdown() -> None:  # pragma: no cover - wiring
         await revoker.stop()
+        await quarantine_releaser.stop()
 
     return app
 

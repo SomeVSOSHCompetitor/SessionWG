@@ -37,6 +37,9 @@ class Settings(BaseSettings):
     address_prefix: str = "10.10.0."  # simplistic allocator base
     network_cidr: str = "10.0.0.0/24"
 
+    # IP Quarantine
+    ip_quarantine_duration_seconds: int = 180
+
     # wgctl settings
     wgctl_token: str = "secret-token-change-me"
     wgctl_socket: str = "/run/wgctl/wgctl.sock"
