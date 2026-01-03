@@ -36,6 +36,10 @@ class Settings(BaseSettings):
     dns: str = "10.0.0.1"
     address_prefix: str = "10.10.0."  # simplistic allocator base
 
+    # wgctl settings
+    wgctl_token: str = "secret-token-change-me"
+    wgctl_socket: str = "/run/wgctl/wgctl.sock"
+
     # Admin
     admin_token: str = "admin-token-change-me"
 
