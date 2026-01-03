@@ -28,13 +28,13 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg2://postgres:password@localhost:5432/wg"
 
     # WireGuard defaults
-    wg_interface: str = "wg0"
-    wg_endpoint: str = "vpn.example.com:51820"
-    wg_gateway_pubkey: str = "GATEWAY_PUBKEY_PLACEHOLDER"
-    wg_allowed_ips: str = "10.0.0.0/16"
-    wg_reserved_ips: list[str] = []
-    wg_dns: str = "10.0.0.1"
-    wg_address_prefix: str = "10.10.0."  # simplistic allocator base
+    interface: str = "wg0"
+    endpoint: str = "vpn.example.com:51820"
+    gateway_pubkey: str = "GATEWAY_PUBKEY_PLACEHOLDER"
+    allowed_ips: str = "10.0.0.0/16"
+    reserved_ips: list[str] = []
+    dns: str = "10.0.0.1"
+    address_prefix: str = "10.10.0."  # simplistic allocator base
 
     # Admin
     admin_token: str = "admin-token-change-me"

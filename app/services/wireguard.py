@@ -12,7 +12,7 @@ class WireGuardService:
         logger.info("[WG] add peer session=%s pubkey=%s allowed_ips=%s", session_id, client_pubkey, allowed_ips)
 
     def remove_peer(self, session_id: str, client_pubkey: str) -> None:
-        iface = settings.wg_interface
+        iface = settings.interface
         cmd = ["wg", "set", iface, "peer", client_pubkey, "remove"]
 
         logger.info("[WG] remove peer session=%s pubkey=%s", session_id, client_pubkey)

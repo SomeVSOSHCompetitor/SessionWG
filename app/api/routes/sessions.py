@@ -57,7 +57,7 @@ def _validate_owner(sess: SessionModel, user: User) -> None:
 def _allocate_address(user_id: int) -> str:
     # Not production-safe allocator; deterministic for demo
     octet = 10 + (user_id % 200)
-    return f"{settings.wg_address_prefix}{octet}/32"
+    return f"{settings.address_prefix}{octet}/32"
 
 
 def _proof_from_header(proof_header: str | None) -> str:
@@ -105,7 +105,7 @@ def create_session(
     db.add(sess)
     db.commit()
 
-    wireguard_service.add_peer(sess.id, payload.client_pubkey, settings.wg_allowed_ips)
+    wireguard_service.add_peer(sess.id, payload.client_pubkey, settings.allowed_ips)
     audit(db, action="session_created", user_id=user.id, session_id=sess.id)
 
     proof_token = security.create_proof_token(sess.id, user.id)
@@ -282,11 +282,11 @@ def session_config(
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Session not active")
 
     return SessionConfigResponse(
-        interface=WgInterface(address=_allocate_address(sess.user_id), dns=[settings.wg_dns]),
+        interface=WgInterface(address=_allocate_address(sess.user_id), dns=[settings.dns]),
         peer=WgPeer(
-            public_key=settings.wg_gateway_pubkey,
-            endpoint=settings.wg_endpoint,
-            allowed_ips=[settings.wg_allowed_ips],
+            public_key=settings.gateway_pubkey,
+            endpoint=settings.endpoint,
+            allowed_ips=[settings.allowed_ips],
         ),
     )
 
