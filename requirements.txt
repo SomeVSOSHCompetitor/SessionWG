@@ -9,3 +9,4 @@ bcrypt<4
 pyotp
 httpx
 psycopg2-binary
+alembic
