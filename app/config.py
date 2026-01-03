@@ -1,4 +1,7 @@
 from datetime import timedelta
+from typing import Any
+
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -28,6 +31,7 @@ class Settings(BaseSettings):
     wg_endpoint: str = "vpn.example.com:51820"
     wg_gateway_pubkey: str = "GATEWAY_PUBKEY_PLACEHOLDER"
     wg_allowed_ips: str = "10.0.0.0/16"
+    wg_reserved_ips: list[str] = []
     wg_dns: str = "10.0.0.1"
     wg_address_prefix: str = "10.10.0."  # simplistic allocator base
 
@@ -39,6 +43,22 @@ class Settings(BaseSettings):
 
     def proof_token_ttl(self) -> timedelta:
         return timedelta(seconds=self.proof_token_expires_seconds)
+
+
+    @field_validator("wg_reserved_ips", mode="before") # noqa
+    @classmethod
+    def parse_reserved_ips(cls, v: Any) -> list[str]:
+        if v is None or v == "":
+            return []
+
+        if isinstance(v, str):
+            return [x.strip() for x in v.split(",") if x.strip()]
+
+        if isinstance(v, list):
+            return v
+
+        raise TypeError("wg_reserved_ips must be str or list[str]")
+
 
 
 settings = Settings()
