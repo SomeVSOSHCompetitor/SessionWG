@@ -53,4 +53,5 @@ services:
 
 volumes:
   wgctl_sock:
-  pg_test_data:```
+  pg_test_data:
+```
