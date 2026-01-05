@@ -11,12 +11,16 @@ services:
     environment:
       WG_WGCTL_SOCKET: /run/wgctl/wgctl.sock
       WG_WGCTL_TOKEN: ${WG_WGCTL_TOKEN}
-      WG_DATABASE_URL: postgresql+psycopg2://postgres:password@pg_test:5432/wg
+      WG_DATABASE_URL: postgresql+psycopg2://postgres:password@db:5432/wg
     volumes:
       - wgctl_sock:/run/wgctl:rw
     depends_on:
-      - wgctl
-      - pg_test
+      wgctl:
+        condition: service_started
+      db:
+        condition: service_healthy
+    ports:
+      - 8000:8000
 
   wgctl:
     image: ghcr.io/somevsoshcompetitor/wgctl:latest
@@ -32,16 +36,14 @@ services:
     tmpfs:
       - /tmp
       - /run
-
     environment:
       WG_INTERFACE: wg0
       WGCTL_SOCKET: /run/wgctl/wgctl.sock
       WGCTL_TOKEN: ${WG_WGCTL_TOKEN}
-
     volumes:
       - wgctl_sock:/run/wgctl:rw
 
-  pg_test:
+  db:
     image: postgres:16
     restart: unless-stopped
     environment:
@@ -49,9 +51,15 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
     volumes:
-      - pg_test_data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myuser -d mydb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
 volumes:
   wgctl_sock:
-  pg_test_data:
+  db_data:
 ```
