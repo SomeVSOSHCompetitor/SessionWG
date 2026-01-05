@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.db import SessionLocal
 from app.models.session import Session as SessionModel, SessionStatus
+from app.services.ip_alloc import quarantine_session
 from app.services.wireguard import wireguard_service
 from app.services.audit import audit
 
@@ -49,6 +50,7 @@ def _revoke_expired_once() -> None:
             sess.updated_at = now
             db.add(sess)
             db.commit()
+            quarantine_session(db, sess.id)
             audit(db, action="session_expired", user_id=sess.user_id, session_id=sess.id, detail="Auto-expire")
             logger.info("Session %s expired automatically", sess.id)
 

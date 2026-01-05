@@ -32,12 +32,10 @@ def allocate_ip(db: Session, session_id) -> str:
     return str(row.ip)
 
 
-def quarantine_ip(db: Session, ip: str, session_id) -> None:
+def quarantine_ip(db: Session, ip: str) -> None:
     # безопасно: только если этот IP был привязан к этой сессии
     row = db.get(IpPool, ip)
     if not row:
-        return
-    if row.session_id != session_id:
         return
 
     now = datetime.now(timezone.utc)
@@ -45,3 +43,11 @@ def quarantine_ip(db: Session, ip: str, session_id) -> None:
     row.state = IpState.QUARANTINED
     row.session_id = None
     row.updated_at = func.now()
+    db.add(row)
+    db.commit()
+
+def quarantine_session(db: Session, session_id: str) -> None:
+    row: IpPool | None = db.get(IpPool, session_id)
+    if not row:
+        return
+    quarantine_ip(db, row.ip)

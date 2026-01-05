@@ -19,7 +19,7 @@ from app.schemas.session import (
     WgPeer,
 )
 from app.services.audit import audit
-from app.services.ip_alloc import allocate_ip, IpPoolExhausted
+from app.services.ip_alloc import allocate_ip, IpPoolExhausted, quarantine_session
 from app.services.wireguard import wireguard_service
 
 CHALLENGE_TTL_SECONDS = 120
@@ -158,6 +158,7 @@ def revoke_session(
     db.commit()
 
     wireguard_service.remove_peer(sess.id, sess.client_pubkey)
+    quarantine_session(db, sess.id)
     audit(db, action="session_revoked", user_id=user.id, session_id=sess.id, detail="Manual revoke")
 
     return SessionRevokeResponse(status=sess.status.value, revoked_at=now)
