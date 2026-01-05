@@ -47,7 +47,7 @@ def quarantine_ip(db: Session, ip: str) -> None:
     db.commit()
 
 def quarantine_session(db: Session, session_id: str) -> None:
-    row: IpPool | None = db.get(IpPool, session_id)
+    row: IpPool | None = db.get_one(IpPool, {"session_id": session_id})
     if not row:
         return
     quarantine_ip(db, row.ip)
