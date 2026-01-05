@@ -1,6 +1,7 @@
 from datetime import datetime, timezone, timedelta
 
 from sqlalchemy import select, func
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -47,7 +48,8 @@ def quarantine_ip(db: Session, ip: str) -> None:
     db.commit()
 
 def quarantine_session(db: Session, session_id: str) -> None:
-    row: IpPool | None = db.get_one(IpPool, {"session_id": session_id})
-    if not row:
+    try:
+        row: IpPool = db.get_one(IpPool, {"session_id": session_id})
+    except NoResultFound:
         return
     quarantine_ip(db, row.ip)
