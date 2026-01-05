@@ -48,8 +48,8 @@ def quarantine_ip(db: Session, ip: str) -> None:
     db.commit()
 
 def quarantine_session(db: Session, session_id: str) -> None:
-    try:
-        row: IpPool = db.get_one(IpPool, {"session_id": session_id})
-    except NoResultFound:
+    query = select(IpPool).where(IpPool.session_id == session_id)
+    row: IpPool = db.execute(query).scalar()
+    if not row:
         return
     quarantine_ip(db, row.ip)
