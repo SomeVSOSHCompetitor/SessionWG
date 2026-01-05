@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status as http_status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, require_admin
@@ -20,7 +20,7 @@ def list_sessions(status: str | None = Query(default=None), db: Session = Depend
         try:
             status_enum = SessionStatus(status)
         except ValueError:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Bad status filter")
+            raise HTTPException(status_code=http_status.HTTP_400_BAD_REQUEST, detail="Bad status filter")
         query = query.filter(SessionModel.status == status_enum)
     sessions = query.all()
     return [
@@ -39,7 +39,7 @@ def list_sessions(status: str | None = Query(default=None), db: Session = Depend
 def admin_revoke(session_id: str, db: Session = Depends(get_db)) -> dict[str, str]:
     sess = db.query(SessionModel).filter(SessionModel.id == session_id).first()
     if not sess:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Session not found")
     now = datetime.now(timezone.utc)
     sess.status = SessionStatus.REVOKED
     sess.updated_at = now
