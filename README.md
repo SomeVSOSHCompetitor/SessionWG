@@ -5,7 +5,7 @@ services:
   api:
     env_file:
       - .env
-    build: ./api
+    image: ghcr.io/somevsoshcompetitor/sessionwg:latest
     user: "10001:10001"
     restart: unless-stopped
     environment:
@@ -19,7 +19,7 @@ services:
       - pg_test
 
   wgctl:
-    build: ./wgct
+    image: ghcr.io/somevsoshcompetitor/wgctl:latest
     restart: unless-stopped
     network_mode: "host"
     cap_add:
