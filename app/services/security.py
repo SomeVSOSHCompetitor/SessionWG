@@ -29,8 +29,8 @@ def create_access_token(user_id: int) -> str:
     return _create_token({"sub": str(user_id), "scope": "access"}, settings.access_token_ttl())
 
 
-def create_proof_token(session_id: str, user_id: int) -> str:
-    return _create_token({"sub": str(user_id), "sid": session_id, "scope": "proof"}, settings.proof_token_ttl())
+def create_proof_token(user_id: int) -> str:
+    return _create_token({"sub": str(user_id), "scope": "proof"}, settings.proof_token_ttl())
 
 
 def decode_token(token: str) -> Optional[Dict[str, Any]]:

@@ -20,3 +20,15 @@ class VerifyMfaRequest(BaseModel):
 class VerifyMfaResponse(BaseModel):
     access_token: str
     access_expires_in: int
+    proof_token: str
+    proof_expires_in: int
+
+
+class StepUpStartResponse(BaseModel):
+    challenge_id: str
+    challenge_expires_in: int
+
+
+class StepUpVerifyResponse(BaseModel):
+    proof_token: str
+    proof_expires_in: int

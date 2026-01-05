@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.api.deps import get_db, get_current_user
 from app.models.challenge import Challenge, ChallengeType
 from app.models.user import User
 from app.config import settings
@@ -11,7 +11,7 @@ from app.schemas.auth import (
     AuthStartRequest,
     AuthStartResponse,
     VerifyMfaRequest,
-    VerifyMfaResponse,
+    VerifyMfaResponse, StepUpStartResponse, StepUpVerifyResponse,
 )
 from app.services import security
 from app.services.audit import audit
@@ -67,7 +67,7 @@ def verify_mfa(payload: VerifyMfaRequest, db: Session = Depends(get_db)) -> Veri
     if expires_at <= now:
         raise HTTPException(status_code=status.HTTP_410_GONE, detail="Challenge expired")
 
-    user = db.query(User).filter(User.id == challenge.user_id).first()
+    user: User | None = db.query(User).filter(User.id == challenge.user_id).first()
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
@@ -79,8 +79,69 @@ def verify_mfa(payload: VerifyMfaRequest, db: Session = Depends(get_db)) -> Veri
     db.commit()
 
     access_token = security.create_access_token(user.id)
-    audit(db, action="auth_mfa_verified", user_id=user.id, detail="Access token issued")
+    proof_token = security.create_proof_token(user.id)
+
+    audit(db, action="auth_mfa_verified", user_id=user.id, detail="Access and proof token issued")
 
     return VerifyMfaResponse(
-        access_token=access_token, access_expires_in=settings.access_token_expires_seconds
+        access_token=access_token,
+        access_expires_in=settings.access_token_expires_seconds,
+        proof_token=proof_token,
+        proof_expires_in=settings.proof_token_expires_seconds,
+    )
+
+@router.post("/v1/auth/step-up/start", response_model=StepUpStartResponse)
+def auth_stepup(
+        user: User = Depends(get_current_user),
+        db: Session = Depends(get_db)
+):
+    now = datetime.now(timezone.utc)
+    challenge = Challenge(
+        user_id=user.id,
+        type=ChallengeType.STEPUP,
+        expires_at=now + timedelta(seconds=CHALLENGE_TTL_SECONDS),
+    )
+    db.add(challenge)
+    db.commit()
+    audit(db, action="stepup_start", user_id=user.id, detail="Step-up MFA challenge issued")
+
+    return StepUpStartResponse(
+        challenge_id=challenge.id,
+        challenge_expires_in=CHALLENGE_TTL_SECONDS,
+    )
+
+@router.post("/v1/auth/step-up/verify", response_model=StepUpVerifyResponse)
+def verify_stepup(
+        payload: VerifyMfaRequest,
+        user: User = Depends(get_current_user),
+        db: Session = Depends(get_db),
+):
+    challenge: Challenge | None = db.query(Challenge).filter(Challenge.id == payload.challenge_id).first()
+    if not challenge or challenge.type != ChallengeType.STEPUP:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
+    if challenge.consumed:
+        raise HTTPException(status_code=status.HTTP_410_GONE, detail="Challenge consumed")
+
+    now = datetime.now(timezone.utc)
+    expires_at = _ensure_aware(challenge.expires_at)
+    if expires_at <= now:
+        raise HTTPException(status_code=status.HTTP_410_GONE, detail="Challenge expired")
+
+    if user.id != challenge.user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Challenge not authorized")
+
+    if not security.verify_totp(payload.totp_code, user.mfa_secret):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid MFA")
+
+    challenge.consumed = True
+    db.add(challenge)
+    db.commit()
+
+    proof_token = security.create_proof_token(user.id)
+
+    audit(db, action="stepup_mfa_verified", user_id=user.id, detail="Proof token issued")
+
+    return StepUpVerifyResponse(
+        proof_token=proof_token,
+        proof_expires_in=settings.proof_token_expires_seconds,
     )

@@ -13,8 +13,6 @@ class SessionCreateResponse(BaseModel):
     expires_at: datetime
     max_expires_at: datetime
     status: str
-    proof_token: str
-    proof_expires_in: int
 
 
 class SessionStatusResponse(BaseModel):
@@ -31,23 +29,10 @@ class SessionRevokeResponse(BaseModel):
     revoked_at: datetime
 
 
-class RenewStartResponse(BaseModel):
-    renew_challenge_id: str
-    challenge_expires_in: int
-
-
-class RenewVerifyRequest(BaseModel):
-    renew_challenge_id: str
-    totp_code: str = Field(min_length=6, max_length=6)
-
-
 class RenewVerifyResponse(BaseModel):
     status: str
     expires_at: datetime
     max_expires_at: datetime
-    proof_token: str
-    proof_expires_in: int
-
 
 class WgInterface(BaseModel):
     address: str

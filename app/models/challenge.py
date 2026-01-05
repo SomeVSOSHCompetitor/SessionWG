@@ -9,6 +9,7 @@ from app.models.base import Base
 class ChallengeType(str, Enum):
     LOGIN = "LOGIN"
     RENEW = "RENEW"
+    STEPUP = "STEPUP"
 
 
 class Challenge(Base):
