@@ -34,7 +34,6 @@ class Settings(BaseSettings):
     allowed_ips: list[str] = []
     reserved_ips: list[str] = []
     dns: str = "10.0.0.1"
-    address_prefix: str = "10.10.0."  # simplistic allocator base
     network_cidr: str = "10.0.0.0/24"
 
     # IP Quarantine
