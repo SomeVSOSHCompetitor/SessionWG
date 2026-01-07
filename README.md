@@ -1,4 +1,4 @@
-Example docker-compose.yml to deploy this service with wgctl (each repository dir needs to be put in a dir with this docker-compose)
+Пример конфигурационного файла docker-compose.yml для развёртывания проекта
 
 ```yaml
 services:
