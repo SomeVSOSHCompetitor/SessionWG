@@ -19,6 +19,7 @@ class Challenge(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     session_id = Column(String, ForeignKey("sessions.id"), nullable=True, index=True)
     type = Column(SAEnum(ChallengeType), nullable=False)
+    tries = Column(Integer, nullable=False, default=0)
 
     expires_at = Column(DateTime(timezone=True), nullable=False)
     consumed = Column(Boolean, default=False, nullable=False)

@@ -71,7 +71,13 @@ def verify_mfa(payload: VerifyMfaRequest, db: Session = Depends(get_db)) -> Veri
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
+    if challenge.tries >= 5:
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Too many tries, challenge expired")
+
     if not security.verify_totp(payload.totp_code, user.mfa_secret):
+        challenge.tries += 1
+        db.add(challenge)
+        db.commit()
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid MFA")
 
     challenge.consumed = True
@@ -130,7 +136,13 @@ def verify_stepup(
     if user.id != challenge.user_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Challenge not authorized")
 
+    if challenge.tries >= 5:
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Too many tries, challenge expired")
+
     if not security.verify_totp(payload.totp_code, user.mfa_secret):
+        challenge.tries += 1
+        db.add(challenge)
+        db.commit()
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid MFA")
 
     challenge.consumed = True
