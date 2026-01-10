@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     project_name: str = "wireguard-session-service"
     environment: str = "dev"
 
+    seed_default_user: bool = False
+
     # Security
     jwt_secret_key: str = "change-me"
     jwt_algorithm: str = "HS256"

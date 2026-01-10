@@ -45,7 +45,7 @@ def create_app() -> FastAPI:
         Base.metadata.create_all(bind=engine)
         with SessionLocal() as db:
             sync_ip_pool(db)
-        _seed_default_user()
+        if settings.seed_default_user: _seed_default_user()
         revoker.start()
         quarantine_releaser.start()
 
